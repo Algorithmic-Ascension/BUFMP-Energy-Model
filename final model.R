@@ -1,10 +1,12 @@
 #final model 
-temps = read.csv("Documents/Work/FMP/KMACAMBR9.csv", stringsAsFactors=FALSE)
-for(d in 1:nrow(temps)){
-  temps[d,1] = as.Date(temps[d,1])
-}
+# if you want relative paths, open up R interpreter
+# and use with source( 'final model.R', chdir=T )
+# wonky I know, such is life
+
+temps = read.csv("KMACAMBR9.csv", stringsAsFactors=FALSE)
+temps[,1] = sapply(temps[,1], function(d){ return(as.Date(d)) })
 temps = data.matrix(temps)
-temps = cbind(temps[,1] + round(temps[,2]/24,3), temps[,3])
+temps = cbind(as.numeric(as.Date(temps[,1], origin="1970-01-01"))+signif(temps[,2]/24, 3), temps[,3])
 
 
 #copied wholesale from the other code
@@ -19,7 +21,7 @@ compressBy4 = function(x)
   return(result)
 }
 
-E = read.table("~/Documents/Work/FMP/mystery building - 2012.csv", quote="\"", header=TRUE, sep=",", stringsAsFactors=FALSE)
+E = read.table("~/Documents/Work/BUFMP-Energy-Model/mystery building - 2012.csv", quote="\"", header=TRUE, sep=",", stringsAsFactors=FALSE)
 for(d in 1:nrow(E))
 {
   E[d,1] = as.Date(E[d,1], "%B %d, %Y")
@@ -47,3 +49,7 @@ f.occupancy =  #frequency * hotw estimate * building-specific estimate based on 
 f.temp =  m.t[1]*f.building.type*() #building type * degrees away from baseload as determined by linear fit
 
 plot(e.time, (e.total - f.occuancy - f.temp)/hotw)
+
+#data frame with 
+readable.matrix = function(m, col.date=1) { return(data.frame(m, row.names=sapply(m[,col.date], readable.date))) }
+readable.date = function(d) { return(paste(format(d, "%Y %B %d"), "hour#", round(24*(d - floor(d))))) }

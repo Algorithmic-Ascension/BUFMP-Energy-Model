@@ -1,8 +1,8 @@
 library(KernSmooth)
 
+print(getwd())
 electricity = read.table("~/Documents/Work/FMP/mystery building - 2001.csv", quote="\"", header=TRUE, sep=",", stringsAsFactors=FALSE)
 CDD22 = read.table("~/Documents/Work/FMP/KBOS_CDD_-22F.csv", quote="\"", header=TRUE, sep=";", stringsAsFactors=FALSE)
-
 
 # for(d in 1:nrow(CDD22))
 # {
