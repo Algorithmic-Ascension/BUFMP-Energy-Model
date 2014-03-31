@@ -57,15 +57,16 @@ peaks.valleys = function(d)
 #integrates to 1, choose every other as spliting point 
 #then use peak as the 1-point approximation
 
-approx = function(m,hotw=round(64/24, 3), c=6)
+# 
+hotw.estimate = function(m,hotw, c=6)
 {
   n = nrow(m)
   results = vector("numeric", n) #categorical, which cluster it belongs to
-  d = density(m[m[,4]==hotw,c], bw="SJ")
+  d = density(m[m[,1]%%7==round(hotw,c],3), bw="SJ")
   pv = peaks.valleys(d$y)
   peaks = pv[seq(1,length(pv), 2)]
   valleys = pv[seq(0,length(pv), 2)]
-  print(pv)
+  #print(pv)
   for( i in 1:n )
   {
     results[i] = 1+sum(m[i,c]>d$y[valleys])
@@ -81,14 +82,20 @@ approx = function(m,hotw=round(64/24, 3), c=6)
 # decaying historical data? ie, if we take the non-parametric route.
 
 # dpill from library KernSmooth takes O(n^2)
-# default method SJ from locpoly takes comparable time, I think
 # if it needs to be scaled up, use optimized kNN instead
-m.t = locpoly()
-f.building.type = 1 # vector eventually for buildings
-f.occupancy =  #frequency * hotw estimate * building-specific estimate based on building type
-f.temp =  m.t[1]*f.building.type*() #building type * degrees away from baseload as determined by linear fit
+m.t = function(target.v)
+{
+  xy = locpoly(ET[,3],ET[,2], bandwidth=dpill(ET[,3], ET[,2]))
+  return(sapply( target.v, function(target){ return(xy$y[order(abs(xy$x-target))][1]) })
+  # return y s.t. its corresponding x is the smallest L1 distance to target
+}
 
-# note all factors are 
+f.building.type = 1 # vector eventually for buildings
+f.occupancy = rep(0, 365) #frequency * building-specific estimate based on building type
+f.temp =  m.t(temp.new)*f.building.type
+hotw = sapply(0:167/24, function(h) {return(hotw.estimate(ET, h))})
+
+# note all factors are mututally independent
 plot(row.names(ET), (e.total - f.occuancy - f.temp)/hotw)
 
 #data frame with year month day hour# hour format as row name
