@@ -1,8 +1,8 @@
 library(KernSmooth)
 
 print(getwd())
-electricity = read.table("~/Documents/Work/FMP/mystery building - 2001.csv", quote="\"", header=TRUE, sep=",", stringsAsFactors=FALSE)
-CDD22 = read.table("~/Documents/Work/FMP/KBOS_CDD_-22F.csv", quote="\"", header=TRUE, sep=";", stringsAsFactors=FALSE)
+electricity = read.table("~/Documents/Work/BUFMP-Energy-Model/mystery building - 2001.csv", quote="\"", header=TRUE, sep=",", stringsAsFactors=FALSE)
+CDD22 = read.table("~/Documents/Work/BUFMP-Energy-Model/KBOS_CDD_-22F.csv", quote="\"", header=TRUE, sep=";", stringsAsFactors=FALSE)
 
 # for(d in 1:nrow(CDD22))
 # {
@@ -54,7 +54,7 @@ plot(m[m[,1]>41,][,1], m[m[,1]>41,][,2] , main="Daily Temperature and Electricit
 lines(m[m[,1]>41,][,1], lm(m[m[,1]>41,][,2]~m[m[,1]>41,][,1])$fitted.values, col="blue", lwd=2)
 lines(locpoly(m[m[,1]>41,][,1], m[m[,1]>41,][,2], bandwidth=dpill(m[m[,1]>41,][,1],m[m[,1]>41,][,2])), col="red", lwd=2)
 
-temperatures = read.csv("~/Documents/Work/FMP/KBOS.csv", header=TRUE)
+temperatures = read.csv("~/Documents/Work/BUFMP-Energy-Model/KBOS.csv", header=TRUE)
 temperatures = temperatures[temperatures[,5]==54,]
 
 
@@ -157,7 +157,7 @@ plot(ET.athletics[,1] , (ET.athletics[,3] - sapply(1:nrow(ET.athletics), functio
 ########################################
 
 
-temperatures = read.csv("~/Documents/Work/FMP/KBOS 2012.csv", header=TRUE)
+temperatures = read.csv("~/Documents/Work/BUFMP-Energy-Model/KBOS 2012.csv", header=TRUE)
 temperatures = data.matrix(temperatures[temperatures[,5]==54,])[,-6]
 for(d in 1:nrow(temperatures))
 {
@@ -167,7 +167,7 @@ temperatures.dates = temperatures[,1] + round(temperatures[,4]/24, 3)
 temperatures.temps = temperatures[,6]
 temperatures = na.omit(cbind(temperatures.dates, temperatures.temps))
 
-electricity2 = read.table("~/Documents/Work/FMP/mystery building - 2012.csv", quote="\"", header=TRUE, sep=",", stringsAsFactors=FALSE)
+electricity2 = read.table("~/Documents/Work/BUFMP-Energy-Model/mystery building - 2012.csv", quote="\"", header=TRUE, sep=",", stringsAsFactors=FALSE)
 for(d in 1:nrow(electricity2))
 {
   electricity2[d,1] = as.Date(electricity2[d,1], "%B %d, %Y")
@@ -202,7 +202,7 @@ ET.classroom[,4] = round((ET.classroom[,1]+3) %% 7, 3)
 ET.classroom = cbind( ET.classroom, ET.classroom[,3] - (model.w.classroom$coef[2]*ET.classroom[,2] + model.w.classroom$coef[1]) )
 ET.classroom[ET.classroom[,2]<65,5] = ET.classroom[ET.classroom[,2]<65,3]
 
-plot(0:167/24, sapply(0:167/24, function(dotw){ dotws = ET.classroom[round(ET.classroom[,4], 3)==round(dotw, 3),5]; return(quantile(dotws, 0.5)); }), ylim=c(0, 300), main="Electricity on Hours of the Week", xlab="Hours of the Week", ylab="Demand (KW)", type="l", col="seagreen4", lwd=2)
+plot(0:167/24, sapply(0:167/24, function(dotw){ dotws = ET.classroom[round(ET.classroom[,4], 3)==round(dotw, 3),5]; return(quantile(dotws, 0.5)); }), ylim=c(0, 300), main="Electricity on Hours of the Week", xlab="Day of the Week", ylab="Demand (KW)", type="l", col="seagreen4", lwd=2)
 lines(0:167/24, sapply(0:167/24, function(dotw){ dotws = ET.classroom[round(ET.classroom[,4], 3)==round(dotw, 3),5]; return(mean(dotws)); }), col="tomato4", lwd=2)
 lines(0:167/24, sapply(0:167/24, function(dotw){ dotws = ET.classroom[round(ET.classroom[,4], 3)==round(dotw, 3),5]; return(mean(dotws) + 0.68*sd(dotws)); }), col="tomato1")
 lines(0:167/24, sapply(0:167/24, function(dotw){ dotws = ET.classroom[round(ET.classroom[,4], 3)==round(dotw, 3),5]; return(mean(dotws) - 0.68*sd(dotws)); }), col="tomato1")
@@ -215,9 +215,8 @@ plot(ET.classroom[,1], ET.classroom[,5] / sapply(1:nrow(ET.classroom), function(
 #6th column
 ET.classroom = cbind( ET.classroom, ET.classroom[,5] / sapply(1:nrow(ET.classroom), function(i) { return(hotw.median.classroom[ET.classroom[i,4]==hotw.median.classroom[,1],2]) } ) )
 
-
-#hierarchial clustering wiih sqrt distances
-dotw.slice = function(m, i) {return( relevant.days = matrix(m[m[,4]==i,6], ncol=1, dimnames=list(m[m[,4]==i,1], "factor")) )}
+# c=5 is absolute, c=6 is relative to median
+dotw.slice = function(m, i, c=5) {return( relevant.days = matrix(m[m[,4]==i,c], ncol=1, dimnames=list(m[m[,4]==i,1], "factor")) )}
 dotw.show = function(m,i) {plot(density(dotw.slice(m,i)))}
 
 #matrix(ET.classroom[round(ET.classroom[,4], 3)==round(64/24, 3),6], ncol=1, dimnames=list(ET.classroom[round(ET.classroom[,4], 3)==round(64/24, 3),1], "factor"))
