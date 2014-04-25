@@ -4,7 +4,8 @@
 # wonky I know, such is life
 
 library(KernSmooth)
-library(cvTools)
+#library(cvTools)
+#use crossvalidation to evaluate the model, soon to come
 
 # use $y of the density function as input
 peaks.valleys = function(d)
@@ -13,21 +14,27 @@ peaks.valleys = function(d)
   return(which( d.[-1]*d.[-length(d.)] <0)+1)  #locations of turning points, derivative is 0, peaks and valleys
 }# there will always be an odd number of them because its a pdf
 
-#returns a vector of vectors of peaks and valleys
-pvs = sapply( round(0:167/24, 3), function(hotw, m = ET.classroom)
-  {
-    d = density(m[round(m[,1]%%7,3)==round(hotw,3), 2], bw="SJ")
-    pv = peaks.valleys(d$y)
-    return(d[pv]$x)
-  }
-)
+#index of peaks and valleys in pv
 peaks = function(pv) { return(pv[seq(1,length(pv), 2)]) }
 valleys = function(pv) { return(pv[seq(0,length(pv), 2)]) }
-hotw.estimate = function(m, hotw, c=2)
-{ # return the nth peak where n is 1+the number of 
-  p = peaks(pvs[hotw])
-  v = valleys(pvs[hotw])
-  return (  p[1+sum(m[i,c]>v)] )
+
+hotw.estimate = function(hotw, ET, c=2)
+{ # return the nth peak where n is 1+the number of valleys it's greater than
+  print(hotw)
+  print(round(hotw*24)+1)
+  pvs = sapply( round(0:167/24, 3), function(hotw, ET = ET.classroom)
+    {
+      d = density(ET[round(ET[,1]%%7,3)==round(hotw,3), 2], bw="SJ")
+      pv = peaks.valleys(d$y)
+      return(d[pv]$x)
+    }
+  )
+  p = peaks(pvs[[round(hotw*24)+1]])
+  v = valleys(pvs[[round(hotw*24)+1]])
+  return (  sapply(1:nrow(ET), function(i, ET.=ET, c.=c,p.=p,v.=v) 
+    {
+      return(p.[1+sum(ET.[i,c.]>v.)])
+    } ))
 }
 
 #CONVENTION (note, the dot has no syntactic meaning, it's part of the name)
@@ -39,29 +46,24 @@ hotw.estimate = function(m, hotw, c=2)
 
 # dpill from library KernSmooth takes O(n^2)
 # if it needs to be scaled up, use optimized kNN instead
-m.t = function(target.v)
+m.t = function(temp.new, ET)
 {
-  xy = locpoly(ET[,3],ET[,2], bandwidth=dpill(ET[,3], ET[,2]))
-  return(sapply( target.v, function(target){ return(xy$y[order(abs(xy$x-target))][1]) }))
+  xy = locpoly(ET[,2],ET[,3], bandwidth=dpill(ET[,2], ET[,3]))
+  return(sapply( temp.new, function(target){ return(xy$y[order(abs(xy$x-target))][1]) }))
   # return y s.t. its corresponding x is the smallest L1 distance to target
 }
 
-temperatures.temps = rep(c(2, 2.5, 3, 4, 5, 6, 7, 8, 9, 8, 7, 6, 7, 8, 9, 8, 7, 6, 5, 4, 3, 2, 1, 1.5), 365)+rnorm(8760)
-ET = cbind(E.dates, E.hourly, temperatures.temps)
-
-# predict 1st argument based on 2nd
-predict = function(temp.new, ET)
+# predict 1st argument based on 2nd, y on x
+predict = function(ET.new, ET)
 {
   f.building.type = 1 # vector eventually for buildings
   f.occupancy = rep(0, 365) #frequency * building-specific estimate based on building type
-  f.temp =  m.t(temp.new)*f.building.type
-  hotw = c(0, sapply(1:167/24, function(h) {return(hotw.estimate(ET, h))}))
-  
-  # note all factors are mututally independent
-  #plot(row.names(ET), (e.total - f.occuancy - f.temp)/hotw)
+  f.temp =  m.t(ET.new[,2], ET=ET)*f.building.type
+  f.hourly = hotw.estimate(ET.new[,1]%%7, ET)
+  return( f.temp + f.hourly )
 }  
   #data frame with year month day hour# hour format as row name
-readable.matrix = function(m, col.date=1) { return(data.frame(m, row.names=sapply(m[,col.date], readable.date))) }
+readable.matrix = function(m, col.date=1) { return(data.frame(m[-col.date], row.names=sapply(m[,col.date], readable.date))) }
 readable.date = function(d) { return(paste(format(as.Date(d,origin="1970-01-01"), "%Y %B %d"), "hour#", round(24*(d - floor(d))))) }
 
 
