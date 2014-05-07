@@ -18,22 +18,23 @@ peaks.valleys = function(d)
 peaks = function(pv) { return(pv[seq(1,length(pv), 2)]) }
 valleys = function(pv) { return(pv[seq(0,length(pv), 2)]) }
 
-hotw.estimate = function(hotw, ET, c=2)
+train = function(ET, c=2)
 { # return the nth peak where n is 1+the number of valleys it's greater than
-  print(hotw)
-  print(round(hotw*24)+1)
-  pvs = sapply( round(0:167/24, 3), function(hotw, ET = ET.classroom)
-    {
-      d = density(ET[round(ET[,1]%%7,3)==round(hotw,3), 2], bw="SJ")
-      pv = peaks.valleys(d$y)
-      return(d[pv]$x)
-    }
+  pvs = sapply( round(0:167/24, 3), function(hotw, ET. = ET.classroom)
+  {
+    d = density(ET.[round(ET.[,1]%%7,3)==round(hotw,3), 5], bw="SJ")
+    pv = peaks.valleys(d$y)
+    return(d$x[pv])
+  }
   )
-  p = peaks(pvs[[round(hotw*24)+1]])
-  v = valleys(pvs[[round(hotw*24)+1]])
-  return (  sapply(1:nrow(ET), function(i, ET.=ET, c.=c,p.=p,v.=v) 
+  p = sapply(1:168, function(h) {return(peaks(pvs[[h]]))})
+  v = sapply(1:168, function(h) {return(valleys(pvs[[h]]))})
+  return (  sapply(1:nrow(ET), 
+    function(i, ET.=ET, c.=c,p.=p,v.=v) 
     {
-      return(p.[1+sum(ET.[i,c.]>v.)])
+      #print(i)
+      pv.i = round(ET[i,4])+1
+      return(p.[[pv.i]][1+sum(ET.[i,c.]>v.[[pv.i]])])
     } ))
 }
 
@@ -84,48 +85,3 @@ readable.date = function(d) { return(paste(format(as.Date(d,origin="1970-01-01")
 #   }
 #   return(d$x[peaks[results]])
 # }
-
-### Used for prototyping purposes
-# temps = read.csv("Documents/Work/BUFMP-Energy-Model/KMACAMBR9.csv", stringsAsFactors=FALSE)
-# temps[,1] = sapply(temps[,1], function(d){ return(as.Date(d)) })
-# temps = data.matrix(temps)
-# temps = cbind(as.numeric(as.Date(temps[,1], origin="1970-01-01"))+signif(temps[,2]/24, 3), temps[,3])
-# 
-# 
-# #copied wholesale from the other code
-# compressBy4 = function(x)
-# {
-#   result = vector("numeric", length(x)/4)
-#   for( i in 0 : (length(x)/4 - 1) )
-#   {
-#     numbers.of.interest = x[(i*4+1):(i*4+4)]
-#     result[i+1] = sum(numbers.of.interest) / (4-sum(is.na(numbers.of.interest)))
-#   }
-#   return(result)
-# }
-# 
-# E = read.table("~/Documents/Work/BUFMP-Energy-Model/mystery building - 2012.csv", quote="\"", header=TRUE, sep=",", stringsAsFactors=FALSE)
-# for(d in 1:nrow(E))
-# {
-#   E[d,1] = as.Date(E[d,1], "%B %d, %Y")
-#   E[d,98] = as.numeric(gsub(",", "", E[d,98]))
-# }
-# E = data.matrix(E)
-# E.dates = as.vector(t( matrix(E[-366,1], nrow=365, ncol=24) + t(matrix(round(0:23/24, 3), nrow=24, ncol=365))))
-# E.hourly = compressBy4(as.vector(t(E[-366,2:97]))) # t(matrix(0:23/24, nrow=24, ncol=96))
-# E = cbind(E.dates, E.hourly)
-# # E = na.omit(E)
-# 
-# #matching electricity to temperature
-# # O(n^2), replace with complete matrix, I only used it because
-# # I didn't want to linearly interpolate data points
-# ET = c()
-# for(i in 1:nrow(E))
-# {
-#   if(sum(E[i,1]==temps[,1])!=0)
-#   {
-#     ET = rbind(ET, c(E[i,1], E[i,2] , temps[E[i,1]==temps[,1],2]))
-#   }
-# }
-# col.names(ET, c("Date", "Electricity", "Temperature"))
-###End prototype code
