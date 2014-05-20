@@ -2,8 +2,8 @@ from urllib2 import urlopen
 from datetime import datetime, timedelta
 
 with open('acquireTemperature.csv', 'w+') as csv:
-	runner = datetime(2011,01,01)
-	anchor = datetime(2014,02,20)
+	runner = datetime(2011,01,30)
+	anchor = datetime(2011,02,02)
 	m = []
 	while (runner < anchor):
 		print 'downloading data for '+`runner.year`+'/'+`runner.month`+'/'+`runner.day`
@@ -12,9 +12,8 @@ with open('acquireTemperature.csv', 'w+') as csv:
 		#for row in rows:
 		#	row.split(':')[0].split(',')
 		#print rows
-		print `runner.year` + `runner.month` + `runner.day`
 		[m.append([`runner.year`,`runner.month`,`runner.day`] + row.split(',')[:2]) for row in rows[1:len(rows)-1]]
 		for n in m:
 			n[3] = n[3].split(':')[0]
-		csv.write('\n'.join([','.join(n) for n in m] + ['']))
 		runner += timedelta(days=1)
+	csv.write('\n'.join([','.join(n) for n in m] + ['']))
