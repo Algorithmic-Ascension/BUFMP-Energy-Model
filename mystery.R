@@ -216,8 +216,8 @@ plot(ET.classroom[,1], ET.classroom[,5] / sapply(1:nrow(ET.classroom), function(
 ET.classroom = cbind( ET.classroom, ET.classroom[,5] / sapply(1:nrow(ET.classroom), function(i) { return(hotw.median.classroom[ET.classroom[i,4]==hotw.median.classroom[,1],2]) } ) )
 
 # c=5 is absolute, c=6 is relative to median
-dotw.slice = function(m, i, c=5) {return( relevant.days = matrix(m[m[,4]==i,c], ncol=1, dimnames=list(m[m[,4]==i,1], "factor")) )}
-dotw.show = function(m,i) {plot(density(dotw.slice(m,i), bw="SJ"))}
+hotw.slice = function(m, i, c=5) {return( relevant.days = matrix(m[m[,4]==i,c], ncol=1, dimnames=list(m[m[,4]==i,1], "factor")) )}
+hotw.show = function(m,i) {plot(density(dotw.slice(m,i), bw="SJ"))}
 
 #matrix(ET.classroom[round(ET.classroom[,4], 3)==round(64/24, 3),6], ncol=1, dimnames=list(ET.classroom[round(ET.classroom[,4], 3)==round(64/24, 3),1], "factor"))
 

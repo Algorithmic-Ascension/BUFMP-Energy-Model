@@ -7,6 +7,18 @@ library(KernSmooth)
 #library(cvTools)
 #TODO use crossvalidation to evaluate the model
 
+ET.SMG = as.vector(t(read.csv("~/Documents/Work/BUFMP-Energy-Model/Electricity.SMG.2011.csv", header=F, na.strings="No Record")))
+ET.SMG = append(ET.SMG, as.vector(t(read.csv("~/Documents/Work/BUFMP-Energy-Model/Electricity.SMG.2012.csv", header=F, na.strings="No Record"))))
+ET.SMG = append(ET.SMG, as.vector(t(read.csv("~/Documents/Work/BUFMP-Energy-Model/Electricity.SMG.2013.csv", header=F, na.strings="No Record"))))
+ET.SMG = append(ET.SMG, as.vector(t(read.csv("~/Documents/Work/BUFMP-Energy-Model/Electricity.SMG.2014.csv", header=F, na.strings="No Record"))))
+
+lastDuplicates(m)
+{ # last copy of duplicates (most minutes are 54)
+  v = sapply(1:nrow(m), function(i) {return(paste(m[i,1], m[,2], m[i,3], m[i,4]))} )
+  return (m[rev(!duplicated(rev(v))),])
+}
+
+
 # use $y of the density function as input
 peaks.valleys = function(d)
 {
@@ -14,7 +26,7 @@ peaks.valleys = function(d)
   return(which( d.[-1]*d.[-length(d.)] <0)+1)  #locations of turning points, derivative is 0, peaks and valleys
 }# there will always be an odd number of them because its a pdf
 
-#index of peaks and valleys in pv
+#parses out peaks and valleys separately from pv
 peaks = function(pv) { return(pv[seq(1,length(pv), 2)]) }
 valleys = function(pv) { return(pv[seq(0,length(pv), 2)]) }
 
@@ -25,8 +37,7 @@ hotw.estimate = function(ET.new, ET, c=2)
     d = density(ET.[round(ET.[,1]%%7,3)==round(hotw,3), 3], bw="SJ")
     pv = peaks.valleys(d$y)
     return(d$x[pv])
-  }
-  )
+  })
   p = sapply(1:168, function(h) {return(peaks(pvs[[h]]))})
   v = sapply(1:168, function(h) {return(valleys(pvs[[h]]))})
   
@@ -35,7 +46,7 @@ hotw.estimate = function(ET.new, ET, c=2)
       this.year = j*365*24 + 1
       next.year = (j+1)*365*24
       return(
-        sapply(this.year:min(min(nrow(ET)-this.year,1), next.year), 
+        sapply(this.year:min(nrow(ET), next.year), 
         function(i, ET.=ET, c.=c,p.=p,v.=v)
         {
           pv.i = round(round(ET.[i,1]%%7, 3)*24) + 1
@@ -44,10 +55,8 @@ hotw.estimate = function(ET.new, ET, c=2)
         } )
     )}
       
-  )
-  #print(training)
-  
-  #return the mode of each of them
+  )  
+  #return the mode of each of hoty
   return ( sapply(training, function(x) { return(as.numeric(names(sort(-table(x)))[1])) } ) )
 }
 
@@ -82,5 +91,5 @@ predict = function(ET.new, ET)
 }
 
 #data frame with year month day hour# hour format as row name
-readable.matrix = function(m, col.date=1) { return(data.frame(m[-col.date], row.names=sapply(m[,col.date], readable.date))) }
+readable.matrix = function(m, col.date=1) { return(data.frame(m[,-col.date], row.names=sapply(m[,col.date], readable.date))) }
 readable.date = function(d) { return(paste(format(as.Date(d,origin="1970-01-01"), "%Y %B %d"), "hour#", round(24*(d - floor(d))))) }
