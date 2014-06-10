@@ -12,7 +12,7 @@ E.SMG = append(ET.SMG, as.vector(t(read.csv("~/Documents/Work/BUFMP-Energy-Model
 E.SMG = append(ET.SMG, as.vector(t(read.csv("~/Documents/Work/BUFMP-Energy-Model/Electricity.SMG.2012.csv", header=F, na.strings="No Record"))))
 E.SMG = append(ET.SMG, as.vector(t(read.csv("~/Documents/Work/BUFMP-Energy-Model/Electricity.SMG.2013.csv", header=F, na.strings="No Record"))))
 #ET.SMG = append(ET.SMG, as.vector(t(read.csv("~/Documents/Work/BUFMP-Energy-Model/Electricity.SMG.2014.csv", header=F, na.strings="No Record"))))
-ET.SMG.dates = as.vector(t( matrix(as.numeric(as.Date("2010-01-01")):as.numeric(as.Date("2012-12-31")), nrow=730, ncol=24) + t(matrix(0:23/24, nrow=24, ncol=730))))
+ET.SMG.dates = as.vector(t( matrix(as.numeric(as.Date("2010-01-01")):as.numeric(as.Date("2012-12-31")), nrow=1096, ncol=24) + t(matrix(0:23/24, nrow=24, ncol=1096))))
 
 #works, but not fast enough
 #lastDuplicates = function(m)
@@ -41,34 +41,32 @@ train = function(ET.new, ET, pvs, c=2)
 #     pv = peaks.valleys(d$y)
 #     return(d$x[pv])
 #   })
-   p = sapply(1:168, function(h) {return(peaks(pvs[[h]]))})
-   v = sapply(1:168, function(h) {return(valleys(pvs[[h]]))})
+  p = sapply(1:168, function(h) {return(peaks(pvs[[h]]))})
+  v = sapply(1:168, function(h) {return(valleys(pvs[[h]]))})
   
-  #training = sapply( 0:floor(nrow(ET)/8760),
-  #  function(j){
-  #    this.year = j*365*24 + 1
-  #    next.year = (j+1)*365*24
-  #    return(
-  #      sapply(this.year:min(nrow(ET), next.year), 
-    training = sapply(1:nrow(ET),
+  training = sapply( round(1:8760/24,3),
+     function(hoty){
+      return(
+        sapply(ET[ET[,1]==hoty],
         function(i, ET.=ET, c.=c,p.=p,v.=v)
         {
           pv.i = round(round(ET.[i,1]%%7, 3)*24) + 1
-          #print(pv.i)
           return(p.[[pv.i]][1+sum(ET.[i,c.]>v.[[pv.i]])])
-        } )
-  #  )}
-      
-  #)
-  return(training)
+        })
+    )}
+  )
+  
+  print(training)
+  #return(training)
   #return the mode of each of hoty
-  #return (
+  return (
     #unlist(
-  #    sapply(training, function(x) { 
-  #      return(as.numeric(names(sort(-table(x)))[1]))
-  #    } )
+      sapply(training, function(x) {
+        ux = unique(x)
+        return(ux[which.max(tabulate(match(x, ux)))])
+      })
     #)
-  #)
+  )
 }
 
 #CONVENTION (note, the dot has no syntactic meaning, it's part of the name)
@@ -94,8 +92,8 @@ predict = function(ET.new, ET)
   f.building.type = 1 # vector eventually for buildings
   f.occupancy = rep(0, nrow(ET.new)) #frequency * building-specific estimate based on building type
   f.temp =  m.t(ET.new[,2], ET=ET)*f.building.type
-  resid.ET = cbind(ET[,1:2], ET[,3] - f.temp - f.occupancy )
-  resid.ET.new = cbind(ET.new[,1:2], ET.new[,3] - m.t(ET.new[,2], ET=ET)*f.building.type - f.occupancy.new )
+  resid.ET = cbind(ET[,1:2], ET[,3]) #- f.temp - f.occupancy )
+  resid.ET.new = cbind(ET.new[,1:2], ET.new[,3] - m.t(ET.new[,2], ET=ET)) #*f.building.type - f.occupancy.new )
 
   #TODO integrate into hotw.estimate
   pvs = sapply( round(0:167/24, 3), function(hotw, ET. = ET)
@@ -106,7 +104,7 @@ predict = function(ET.new, ET)
   })
   
   f.hourly = hotw.estimate(resid.ET.new, resid.ET)
-  #print(f.hourly)
+  print(f.hourly)
   return( f.temp + f.hourly + f.occupancy )
 }
 
