@@ -7,7 +7,7 @@ year=int(argv[1])
 
 with open(`year` + 'Temp.csv', 'w+') as csv:
 	runner = datetime(year,01,01)
-	anchor = datetime(year,01,03)
+	anchor = datetime(year+1,01,01)
 	while (runner < anchor):
 		m = OrderedDict()
 		print 'downloading data for '+`runner.year`+'/'+`runner.month`+'/'+`runner.day`
