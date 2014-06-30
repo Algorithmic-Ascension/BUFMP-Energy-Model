@@ -25,7 +25,7 @@ with open(`year` + 'Temp.csv', 'w+') as csv:
 		rows = rows[1:-1]
 		cells = [row.split(',') for row in rows]
 		for cell in cells:
-			m[ datetime.strptime(runner.strftime("%Y-%m-%d") + ' ' + cell[0], '%Y-%m-%d %I:%M %p').strftime('%Y-%m-%d %H')] = cell[1]
+			m[ datetime.strptime(runner.strftime("%Y-%m-%d") + ',' + cell[0], '%Y-%m-%d,%I:%M %p').strftime('%Y-%m-%d,%H')] = cell[1]
 		runner += timedelta(days=1)
 	
 		for n in m:
